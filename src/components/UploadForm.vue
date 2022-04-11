@@ -1,5 +1,15 @@
 <template>
     <div class = "container">
+        <div v-if="response.errors != 'novalue'">
+            <ul id="vlist">
+                <li v-for="(error, index) in response.errors">
+                    {{ error }}
+                </li>
+            </ul>
+        </div>
+        <div v-if="response.message != 'novalue'">
+            {{response.message}}
+        </div>
         <form method="POST" enctype="multipart/form-data" id = "uploadForm" @submit.prevent="uploadPhoto" >
             <ul class="formstf">
                 <li class="form-field">
@@ -21,7 +31,7 @@
 export default {
     data() {
       return {
-          response: null,
+          response: {},
           csrf_token: '',
           form:{
               description: '',
@@ -47,13 +57,10 @@ export default {
                 };
             },
         uploadPhoto(){
+            let self = this
             let uploadForm = document.getElementById('uploadForm');
             let form_data = new FormData(uploadForm);
-            console.log(this.form.photo.data)
             form_data.append('photo',this.form.photo.data)
-            for (var key of form_data.entries()){
-                console.log(key[0] + ', ' + key[1]);
-            }
             fetch("/api/upload", { 
                 method : 'POST',
                 headers: {
@@ -66,6 +73,7 @@ export default {
             })
             .then(function (data) {
             // display a success message
+            self.response = data;
             console.log(data);
             })
             .catch(function (error) {
@@ -80,8 +88,19 @@ export default {
                 console.log(data);
                 self.csrf_token = data.csrf_token;
             })
+        },
+        containskey(obj, key){
+            return Object.keys(obj).includes(key)
         }
          
+    },
+    computed: {
+        haserr() {
+            return this.containsKey(this.response, 'errors');
+        },
+        hasmsg() {
+            return this.containsKey(this.response, 'errors');
+        }
     }
     
 

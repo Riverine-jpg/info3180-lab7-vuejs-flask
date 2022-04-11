@@ -26,17 +26,22 @@ def get_csrf():
 
 @app.route('/api/upload',methods=['POST'])
 def upload():
-    print("???")
     form = UploadForm()
-    form.photo.data = request.files['photo']
-    form.desc.data = request.form.get("description")
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            filename = secure_filename(form.photo.data.filename)
-            form.photo.data.save(app.config['UPLOAD_FOLDER'] + '/' + filename)
-        else:
-            return jsonify(form_errors(form))
-        print(jsonify(message = "File Upload Successful",filename = filename,description = form.desc.data))
+    if(request.files['photo']):
+        form.photo.data = request.files['photo']
+        form.desc.data = request.form.get("description")
+    else:
+        err = []
+        if not (request.form.get("description")):
+            err = ['Error in the Description field - This field is required.']
+        err.append('Error in the Photo field - This field is required.')
+        return jsonify(errors = err)
+    if form.validate_on_submit():
+        filename = secure_filename(form.photo.data.filename)
+        form.photo.data.save(app.config['UPLOAD_FOLDER'] + '/' + filename)
+    else:
+        return jsonify(errors = form_errors(form))
+    print(jsonify(message = "File Upload Successful",filename = filename,description = form.desc.data))
     return jsonify(message = "File Upload Successful",filename = filename,description = form.desc.data)
 
 ###
